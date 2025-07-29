@@ -1,0 +1,261 @@
+{
+  "timestamp": "2025-06-05T11:41:42.685074",
+  "strategy": "ai_portfolio_optimization",
+  "configuration": {
+    "target_return": "15.0%",
+    "time_horizon": "30 days",
+    "max_investment": 500000.0
+  },
+  "sell_orders": [
+    {
+      "symbol": "POWERGRID",
+      "quantity": 46.0,
+      "value": 13521.700561523438,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "ARE&M",
+      "quantity": 17.0,
+      "value": 17020.40020751953,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "COALINDIA",
+      "quantity": 100.0,
+      "value": 39485.00061035156,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "quantity": 3.0,
+      "value": 26682.0,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "ITC",
+      "quantity": 50.0,
+      "value": 20944.99969482422,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "AXISBANK",
+      "quantity": 20.0,
+      "value": 23278.00048828125,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "quantity": 15.0,
+      "value": 35520.0,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "SGBAUG28V",
+      "quantity": 1.0,
+      "value": 4775.0,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "NESTLEIND",
+      "quantity": 50.0,
+      "value": 119825.0,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "SBICARD",
+      "quantity": 10.0,
+      "value": 9412.999877929688,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "HDFCSENSEX",
+      "quantity": 70.0,
+      "value": 6386.100234985352,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "IOC",
+      "quantity": 237.0,
+      "value": 33315.091735839844,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "NMDC",
+      "quantity": 150.0,
+      "value": 10642.499542236328,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "ICICIBANK",
+      "quantity": 40.0,
+      "value": 57747.998046875,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "HDFCNIFTY",
+      "quantity": 15.0,
+      "value": 4128.599853515625,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "EMBASSY",
+      "quantity": 30.0,
+      "value": 11745.0,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "PIDILITIND",
+      "quantity": 15.0,
+      "value": 46685.99853515625,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "quantity": 4.0,
+      "value": 16871.599609375,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "SUNDRMFAST",
+      "quantity": 1,
+      "value": 2012.011001586914,
+      "predicted_return": 0,
+      "status": "success",
+      "order_id": "N/A"
+    }
+  ],
+  "buy_orders": [
+    {
+      "symbol": "HDFCBANK",
+      "quantity": 36,
+      "price": 1720,
+      "investment": 61920,
+      "sector": "Banking",
+      "predicted_return": 0.18,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "ICICIBANK",
+      "quantity": 43,
+      "price": 1445,
+      "investment": 62135,
+      "sector": "Banking",
+      "predicted_return": 0.17,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "quantity": 35,
+      "price": 1750,
+      "investment": 61250,
+      "sector": "Banking",
+      "predicted_return": 0.16,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "TCS",
+      "quantity": 16,
+      "price": 3850,
+      "investment": 61600,
+      "sector": "IT",
+      "predicted_return": 0.17,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "INFY",
+      "quantity": 33,
+      "price": 1890,
+      "investment": 62370,
+      "sector": "IT",
+      "predicted_return": 0.16,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "HCLTECH",
+      "quantity": 37,
+      "price": 1650,
+      "investment": 61050,
+      "sector": "IT",
+      "predicted_return": 0.15,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "RELIANCE",
+      "quantity": 25,
+      "price": 2450,
+      "investment": 61250,
+      "sector": "Energy",
+      "predicted_return": 0.22,
+      "status": "success",
+      "order_id": "N/A"
+    },
+    {
+      "symbol": "NTPC",
+      "quantity": 162,
+      "price": 385,
+      "investment": 62370,
+      "sector": "Power",
+      "predicted_return": 0.15,
+      "status": "success",
+      "order_id": "N/A"
+    }
+  ],
+  "portfolio_before": {
+    "total_value": 646025.5861663818,
+    "total_investment": 410595.95999999996,
+    "total_pnl": 235429.62616638184,
+    "holdings_count": 26
+  },
+  "portfolio_after": {},
+  "execution_summary": {
+    "successful_sells": 19,
+    "successful_buys": 8,
+    "total_proceeds": 500000.0,
+    "total_invested": 493945,
+    "remaining_cash": 6055.0,
+    "expected_gains": 83947.75,
+    "expected_roi": 16.995363856299793
+  }
+}
