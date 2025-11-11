@@ -115,7 +115,7 @@ python ai_trading_agent.py
 $ python run.py
 # Select option 3: Analyze Current Portfolio
 # No parameters needed - AI analyzes your holdings automatically
-# Results saved to reports/portfolio_analysis_[timestamp].txt
+# Results saved to reports/portfolio_analysis_[timestamp].md
 ```
 
 ### Example 2: Find Investment Opportunities
@@ -124,7 +124,7 @@ $ python run.py
 # Select option 7: Find Investment Opportunities
 💰 Enter your investment budget (INR): 25000
 # AI recommends stocks based on your budget and target returns
-# Results saved to reports/investment_opportunities_[timestamp].txt
+# Results saved to reports/investment_opportunities_[timestamp].md
 ```
 
 ### Example 3: Custom Strategy (Natural Language)
@@ -134,7 +134,7 @@ $ python run.py
 � Your Strategy: "Buy top 3 banking stocks under ₹2000"
 🔴 Proceed with strategy execution? (yes/no): yes
 # AI executes your custom strategy
-# Results saved to reports/strategy_execution_[timestamp].txt
+# Results saved to reports/strategy_execution_[timestamp].md
 ```
 
 ### Example 4: Stock Screening with Custom Parameters
@@ -144,7 +144,7 @@ $ python run.py
 🎯 Target return percentage (default: 15.0%): 20
 📅 Time horizon in days (default: 30): 45
 # AI screens 200+ stocks for 20% return in 45 days
-# Results saved to reports/stock_screening_[timestamp].txt
+# Results saved to reports/stock_screening_[timestamp].md
 ```
 
 ### Example 5: Direct AI Portfolio Optimization

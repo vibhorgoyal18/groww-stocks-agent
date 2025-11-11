@@ -39,7 +39,7 @@ class TradingScheduler:
             if result["status"] == "success":
                 # Save analysis with timestamp
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"scheduled_analysis_{timestamp}.txt"
+                filename = f"scheduled_analysis_{timestamp}.md"
                 
                 with open(filename, 'w') as f:
                     f.write(f"Scheduled Portfolio Analysis - {datetime.now()}\n")
@@ -63,7 +63,7 @@ class TradingScheduler:
                 
                 if result["status"] == "success":
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"scheduled_rebalancing_{timestamp}.txt"
+                    filename = f"scheduled_rebalancing_{timestamp}.md"
                     
                     with open(filename, 'w') as f:
                         f.write(f"Scheduled Portfolio Rebalancing - {datetime.now()}\n")

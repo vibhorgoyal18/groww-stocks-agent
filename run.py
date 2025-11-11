@@ -127,7 +127,7 @@ Provide comprehensive portfolio analysis report.""")
             
             # Save analysis to file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/portfolio_analysis_{timestamp}.txt"
+            filename = f"reports/portfolio_analysis_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Portfolio Analysis - {datetime.now()}\n")
@@ -174,7 +174,7 @@ Make sure to achieve proper diversification and target {:.1%} returns.""".format
             
             # Save results
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/rebalancing_results_{timestamp}.txt"
+            filename = f"reports/rebalancing_results_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Portfolio Rebalancing - {datetime.now()}\n")
@@ -227,7 +227,7 @@ Budget: ₹{budget:,.2f}""")
             
             # Save opportunities
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/investment_opportunities_{timestamp}.txt"
+            filename = f"reports/investment_opportunities_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Investment Opportunities - {datetime.now()}\n")
@@ -279,7 +279,7 @@ def run_custom_strategy():
             
             # Save results
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/strategy_execution_{timestamp}.txt"
+            filename = f"reports/strategy_execution_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Custom Strategy Execution - {datetime.now()}\n")
@@ -313,7 +313,7 @@ def run_market_analysis():
             
             # Save analysis
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/market_analysis_{timestamp}.txt"
+            filename = f"reports/market_analysis_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Market Analysis - {datetime.now()}\n")
@@ -386,7 +386,7 @@ Analyze: NIFTY 50, Next 50, and sectoral leaders""")
             
             # Save results
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/stock_screening_{timestamp}.txt"
+            filename = f"reports/stock_screening_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Stock Screening - {datetime.now()}\n")
@@ -429,7 +429,7 @@ Include all relevant trading data and recommendations.""")
             
             # Save summary
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reports/trading_summary_{timestamp}.txt"
+            filename = f"reports/trading_summary_{timestamp}.md"
             os.makedirs('reports', exist_ok=True)
             with open(filename, 'w') as f:
                 f.write(f"Trading Summary - {datetime.now()}\n")

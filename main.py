@@ -72,7 +72,7 @@ def analyze_portfolio():
             
             # Save analysis to file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"portfolio_analysis_{timestamp}.txt"
+            filename = f"portfolio_analysis_{timestamp}.md"
             with open(filename, 'w') as f:
                 f.write(f"Portfolio Analysis - {datetime.now()}\n")
                 f.write("=" * 60 + "\n")
@@ -104,7 +104,7 @@ def rebalance_portfolio():
             
             # Save rebalancing results
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"rebalancing_results_{timestamp}.txt"
+            filename = f"rebalancing_results_{timestamp}.md"
             with open(filename, 'w') as f:
                 f.write(f"Portfolio Rebalancing - {datetime.now()}\n")
                 f.write("=" * 60 + "\n")
@@ -137,7 +137,7 @@ def find_opportunities():
             
             # Save opportunities to file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"investment_opportunities_{timestamp}.txt"
+            filename = f"investment_opportunities_{timestamp}.md"
             with open(filename, 'w') as f:
                 f.write(f"Investment Opportunities - {datetime.now()}\n")
                 f.write(f"Budget: ₹{budget:,.2f}\n")
@@ -180,7 +180,7 @@ def custom_strategy():
             
             # Save execution results
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"strategy_execution_{timestamp}.txt"
+            filename = f"strategy_execution_{timestamp}.md"
             with open(filename, 'w') as f:
                 f.write(f"Custom Strategy Execution - {datetime.now()}\n")
                 f.write(f"Strategy: {strategy}\n")
