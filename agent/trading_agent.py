@@ -22,10 +22,9 @@ class TradingAgent:
             raise ValueError("OpenAI API key is required. Please set OPENAI_API_KEY in .env file.")
         
         return ChatOpenAI(
-            model="gpt-4",
-            temperature=0.1,
+            model="gpt-4o",
             api_key=api_key,
-            max_tokens=4000
+            max_tokens=16384  # Increased token limit for gpt-4o-mini
         )
     
     def _create_agent(self) -> AgentExecutor:

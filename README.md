@@ -4,23 +4,66 @@ An intelligent AI-powered trading agent that automates stock trading using Groww
 
 ---
 
-# 🎯 **INSTANT PORTFOLIO OPTIMIZATION**
+# 🎯 **QUICK START - ONE COMMAND TO RULE THEM ALL**
 
-## Execute Complete AI Trading Strategy:
+## 🌟 Unified Interactive Entry Point (Recommended):
+
+```bash
+python run.py
+```
+
+### ✨ **What This Single Command Gives You:**
+
+**Interactive menu-driven interface** with 9 powerful options:
+
+#### 🤖 **AUTOMATED TRADING:**
+1. **AI Portfolio Optimization** - Automatic buy/sell with full analysis
+2. **Portfolio Rebalancing** - AI-powered rebalancing with confirmation
+
+#### 📊 **ANALYSIS (Read-Only):**
+3. **Analyze Current Portfolio** - Comprehensive portfolio analysis
+4. **Comprehensive Market Analysis** - Real-time market sentiment & news
+5. **Multi-Iteration Stock Screening** - Screen 200+ stocks with ML predictions
+6. **Trading Summary Report** - Complete trading history and performance
+
+#### 🎯 **CUSTOM ACTIONS:**
+7. **Find Investment Opportunities** - Discover stocks based on your budget
+8. **Execute Custom Trading Strategy** - Natural language trading commands
+
+#### 📚 **OTHER:**
+9. **Run Enhanced Screening Demo** - Safe demo mode (no real trades)
+
+### 💡 **No Parameters Needed!**
+- The system will **ask you for inputs** as needed
+- Clear prompts for budget, target returns, time horizons, etc.
+- Built-in validation and helpful error messages
+- All results automatically saved to `reports/` folder
+
+### 🔒 **Safety Features:**
+- ⚠️ Confirmation prompts before executing real trades
+- 📄 Automatic report generation and saving
+- 📋 Comprehensive logging to `trading_agent.log`
+- ✅ Environment validation on startup
+
+---
+
+## 🎯 **Alternative Entry Points**
+
+### Execute Complete AI Trading Strategy (Direct):
 
 ```bash
 python ai_trading_agent.py
 ```
 
-### ✅ **What This Single Command Does:**
-- 📊 **Analyzes** your entire portfolio (26+ holdings)
-- 📉 **Sells** worst performing stocks (19 positions worth ₹5,00,000)  
-- 📈 **Buys** high-potential stocks (8 blue-chip stocks)
-- 🎯 **Targets** 17.0% returns in 30 days
-- 📄 **Generates** comprehensive execution reports
-- ⚡ **Executes** real trades through Groww API
+**What This Does:**
+- 📊 Analyzes your entire portfolio automatically
+- 📉 Sells worst performing stocks
+- 📈 Buys high-potential stocks  
+- 🎯 Targets 15% returns in 30 days (configurable in `.env`)
+- 📄 Generates comprehensive execution reports
+- ⚡ Executes real trades through Groww API
 
-### 📈 **Recent Execution Results:**
+### 📈 Recent Execution Results:
 ```
 ✅ Successful Sells: 19/19 positions
 ✅ Successful Buys: 8/8 high-potential stocks  
@@ -29,8 +72,11 @@ python ai_trading_agent.py
 📊 Perfect Sector Diversification: Banking 37.5% | IT 37.5% | Energy 12.4% | Power 12.6%
 ```
 
-### 🚀 **Prerequisites:**
-1. **API Setup**: Configure `.env` with your Groww API token
+---
+
+## 🚀 Prerequisites
+
+1. **API Setup**: Configure `.env` with your Groww API token and OpenAI key
 2. **Dependencies**: Run `pip install -r requirements.txt`
 3. **Execution**: Run from project root directory
 
@@ -39,6 +85,7 @@ python ai_trading_agent.py
 ## ✨ Enhanced Features
 
 ### 🧠 Advanced AI Capabilities
+- **GPT-4o-mini Powered**: Fast, cost-effective AI with 128K context window
 - **Multi-Iteration Stock Screening**: Analyze 200+ Indian stocks across 15+ iterations
 - **Real-Time News Sentiment**: Monitor MoneyControl, Economic Times, LiveMint, Business Standard
 - **Global Events Integration**: Consider international events impacting Indian markets
@@ -52,13 +99,67 @@ python ai_trading_agent.py
 - **Time-Based Targeting**: Configurable return targets for specific time horizons
 - **Portfolio Optimization**: Automated rebalancing based on comprehensive analysis
 
-### 🎯 Current Configuration
-- **Target Return**: 2% in 5 days (configurable)
-- **Max Investment**: ₹50,000 per strategy execution
+### 🎯 Default Configuration (Modify in `.env`)
+- **AI Model**: GPT-4o-mini (128K context, fast & cost-effective)
+- **Target Return**: 15% in 30 days (configurable)
+- **Max Investment**: ₹10,000 per strategy execution (configurable)
 - **Analysis Universe**: 200+ Indian stocks (NIFTY 50, Next 50, sectoral leaders)
-- **Risk Management**: 15% risk threshold with volatility monitoring
+- **Risk Management**: 20% risk threshold with volatility monitoring
 
-## 🚀 Quick Start
+---
+
+## 📖 Usage Examples
+
+### Example 1: Portfolio Analysis (Read-Only)
+```bash
+$ python run.py
+# Select option 3: Analyze Current Portfolio
+# No parameters needed - AI analyzes your holdings automatically
+# Results saved to reports/portfolio_analysis_[timestamp].txt
+```
+
+### Example 2: Find Investment Opportunities
+```bash
+$ python run.py
+# Select option 7: Find Investment Opportunities
+💰 Enter your investment budget (INR): 25000
+# AI recommends stocks based on your budget and target returns
+# Results saved to reports/investment_opportunities_[timestamp].txt
+```
+
+### Example 3: Custom Strategy (Natural Language)
+```bash
+$ python run.py
+# Select option 8: Execute Custom Trading Strategy
+� Your Strategy: "Buy top 3 banking stocks under ₹2000"
+🔴 Proceed with strategy execution? (yes/no): yes
+# AI executes your custom strategy
+# Results saved to reports/strategy_execution_[timestamp].txt
+```
+
+### Example 4: Stock Screening with Custom Parameters
+```bash
+$ python run.py
+# Select option 5: Multi-Iteration Stock Screening
+🎯 Target return percentage (default: 15.0%): 20
+📅 Time horizon in days (default: 30): 45
+# AI screens 200+ stocks for 20% return in 45 days
+# Results saved to reports/stock_screening_[timestamp].txt
+```
+
+### Example 5: Direct AI Portfolio Optimization
+```bash
+$ python ai_trading_agent.py
+# Fully automated:
+# - Analyzes portfolio
+# - Sells underperformers
+# - Buys high-potential stocks
+# - Generates execution report
+```
+
+---
+
+## �🚀 Quick Start
 
 ### 1. Installation
 ```bash
@@ -70,7 +171,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configuration
-Create a `.env` file with your API credentials:
+Create a `.env` file with your API credentials (or copy from `.env.example`):
 ```env
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
@@ -78,14 +179,48 @@ OPENAI_API_KEY=your_openai_api_key_here
 # Groww API Configuration (OAuth 2.0 Token)
 GROWW_API_TOKEN=your_groww_api_token_here
 
-# Trading Configuration
-MAX_INVESTMENT_AMOUNT=50000.0
-RISK_THRESHOLD=0.15
-MIN_EXPECTED_RETURN=0.02
-EXPECTED_RETURN_DAYS=5
+# Trading Configuration (Customize as needed)
+MAX_INVESTMENT_AMOUNT=10000
+RISK_THRESHOLD=0.20
+MIN_EXPECTED_RETURN=15.0
+EXPECTED_RETURN_DAYS=30
+LOG_LEVEL=INFO
 ```
 
-### 3. Demo the Enhanced Capabilities
+**📝 All settings are documented in the `.env` file!**
+
+### 3. Run the Application (Unified Entry Point)
+```bash
+# Start the interactive menu - ONE COMMAND FOR EVERYTHING!
+python run.py
+```
+
+This single command gives you access to ALL features through an interactive menu:
+- 🤖 AI Portfolio Optimization
+- ⚖️ Portfolio Rebalancing
+- 📊 Portfolio Analysis
+- 📈 Market Analysis
+- 🔬 Stock Screening
+- 🎯 Custom Strategies
+- 📋 Trading Summaries
+- And more!
+
+**Example Usage Flow:**
+```bash
+$ python run.py
+
+# Menu appears with 9 options
+# Select option 7 (Find Investment Opportunities)
+👉 Enter your choice (0-9): 7
+
+# System asks for your budget
+💰 Enter your investment budget (INR): 50000
+
+# AI analyzes and provides recommendations
+# Results automatically saved to reports/
+```
+
+### 4. Alternative: Demo the Enhanced Capabilities (Safe Mode)
 ```bash
 # Run the comprehensive demo
 python demo_enhanced_screening.py
@@ -97,20 +232,18 @@ This demo showcases:
 - 🤖 AI agent integration with enhanced tools
 - 📈 Individual stock analysis with market context
 
-### 4. Interactive Trading
+### 5. Alternative Entry Points (Advanced)
 ```bash
-# Start the interactive CLI
+# Direct AI portfolio optimization (no menu)
+python ai_trading_agent.py
+
+# Original interactive CLI
 python main.py
-```
 
-Available options:
-1. **Execute Enhanced Trading Strategy** - Full automation with news analysis
-2. **Comprehensive Market Analysis** - Real-time sentiment from multiple sources
-3. **Multi-Iteration Stock Screening** - Screen 200+ stocks with 15+ iterations
-4. **Analyze Market Opportunities** - Time-sensitive opportunity identification
-5. **Portfolio Analysis** - Current holdings with time-based predictions
+# Automated trading schedule
+python scheduler.py
 
-### 5. Automated Trading
+# Demo mode only
 ```bash
 # Set up automated trading schedule
 python scheduler.py
