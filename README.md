@@ -176,8 +176,15 @@ Create a `.env` file with your API credentials (or copy from `.env.example`):
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Groww API Configuration (OAuth 2.0 Token)
+# Groww API Configuration - Choose Your Authentication Method
+GROWW_AUTH_METHOD=token  # Use 'token' or 'totp'
+
+# Option 1: OAuth 2.0 Token (Requires daily approval)
 GROWW_API_TOKEN=your_groww_api_token_here
+
+# Option 2: TOTP Method (No expiry, recommended)
+GROWW_TOTP_TOKEN=your_totp_api_key_here
+GROWW_TOTP_SECRET=your_totp_secret_here
 
 # Trading Configuration (Customize as needed)
 MAX_INVESTMENT_AMOUNT=10000
@@ -186,6 +193,24 @@ MIN_EXPECTED_RETURN=15.0
 EXPECTED_RETURN_DAYS=30
 LOG_LEVEL=INFO
 ```
+
+#### 🔐 Authentication Methods Explained
+
+**Token Method (OAuth 2.0):**
+- Generate from: https://groww.in/trade-api/api-keys
+- Click "Generate API key" button
+- Requires daily approval from Groww app
+- Token expires after approval period
+
+**TOTP Method (Recommended):**
+- Generate from: https://groww.in/trade-api/api-keys
+- Click dropdown next to "Generate API key" → "Generate TOTP token"
+- Copy both:
+  - **TOTP Token** (API Key) → `GROWW_TOTP_TOKEN`
+  - **TOTP Secret** → `GROWW_TOTP_SECRET`
+- No expiry, no daily approvals needed
+- More secure and convenient
+- Can scan QR code with authenticator app
 
 **📝 All settings are documented in the `.env` file!**
 

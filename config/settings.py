@@ -13,8 +13,16 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: Optional[str] = None
     
-    # Groww API Configuration (OAuth 2.0 Token-based)
+    # Groww API Configuration
+    # Option 1: Direct Token (OAuth 2.0 Token-based - requires daily approval)
     groww_api_token: Optional[str] = None
+    
+    # Option 2: TOTP Flow (No expiry, more permanent)
+    groww_totp_token: Optional[str] = None  # TOTP API Key
+    groww_totp_secret: Optional[str] = None  # TOTP Secret for generating codes
+    
+    # Authentication method: 'token' or 'totp'
+    groww_auth_method: str = "token"  # Default to token method
     
     # Trading Configuration (percentages converted to decimals)
     max_investment_amount: float = 50000.0

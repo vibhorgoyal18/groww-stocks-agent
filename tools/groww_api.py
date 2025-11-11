@@ -3,26 +3,34 @@ import json
 import logging
 from typing import Dict, List, Optional, Any
 from utils.security import key_manager, secure_api_call
+from utils.groww_auth import get_authenticated_groww_client
 from config.settings import settings
 import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
 class GrowwAPIClient:
-    """Secure Groww API client using official SDK."""
+    """Secure Groww API client using official SDK with TOTP support."""
     
     def __init__(self):
         self._groww_api = None
         self._setup_auth()
     
     def _setup_auth(self):
-        """Setup authentication using official SDK."""
-        api_token = key_manager.get_key('GROWW_API_TOKEN')
-        if api_token:
-            self._groww_api = GrowwAPI(api_token)
-            logger.info(f"Groww API initialized with token: {key_manager.get_masked_key('GROWW_API_TOKEN')}")
-        else:
-            logger.warning("No Groww API token found in environment variables")
+        """Setup authentication using the new authentication utility."""
+        try:
+            # Use the new authentication utility
+            self._groww_api = get_authenticated_groww_client()
+            logger.info(f"Groww API initialized with {settings.groww_auth_method} authentication")
+        except Exception as e:
+            logger.error(f"Failed to initialize Groww API: {str(e)}")
+            # Fallback to old token method for backward compatibility
+            api_token = key_manager.get_key('GROWW_API_TOKEN')
+            if api_token:
+                self._groww_api = GrowwAPI(api_token)
+                logger.info(f"Groww API initialized with legacy token: {key_manager.get_masked_key('GROWW_API_TOKEN')}")
+            else:
+                logger.warning("No Groww API authentication configured")
     
     @secure_api_call
     def get_portfolio(self) -> Dict[str, Any]:
