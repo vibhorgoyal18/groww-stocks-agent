@@ -7,15 +7,16 @@
 ## 📋 Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Architecture & Design Patterns](#architecture--design-patterns)
-3. [Project Structure](#project-structure)
-4. [Authentication Flow](#authentication-flow)
-5. [Trading Agent Flow](#trading-agent-flow)
-6. [Key Components](#key-components)
-7. [Development Guidelines](#development-guidelines)
-8. [Common Patterns](#common-patterns)
-9. [Testing & Debugging](#testing--debugging)
-10. [Security Considerations](#security-considerations)
+2. [Documentation Synchronization Rules](#documentation-synchronization-rules) ⚠️ **READ THIS FIRST**
+3. [Architecture & Design Patterns](#architecture--design-patterns)
+4. [Project Structure](#project-structure)
+5. [Authentication Flow](#authentication-flow)
+6. [Trading Agent Flow](#trading-agent-flow)
+7. [Key Components](#key-components)
+8. [Development Guidelines](#development-guidelines)
+9. [Common Patterns](#common-patterns)
+10. [Testing & Debugging](#testing--debugging)
+11. [Security Considerations](#security-considerations)
 
 ---
 
@@ -44,6 +45,97 @@ This is an **AI-powered automated stock trading agent** for the Indian stock mar
 - **Authentication**: Dual support (OAuth Token + TOTP)
 - **Repository**: vibhorgoyal18/groww-stocks-agent
 - **Branch**: feature/totp-authentication (latest), main (stable)
+
+---
+
+## ⚠️ Documentation Synchronization Rules
+
+> **CRITICAL**: This section must be read and followed for EVERY code change!
+
+### 🔄 The Three-File Synchronization Rule
+
+When making changes to configuration or features, these files MUST stay synchronized:
+
+#### 1. Configuration Changes (`.env` modifications)
+
+**If you modify `.env`, you MUST update:**
+
+| File | Action | Why |
+|------|--------|-----|
+| **`.env`** | Add/modify with real values | Your local configuration |
+| **`.env.sample`** | Mirror changes with placeholders | Template for other developers |
+| **`config/settings.py`** | Add field to Settings class | Python configuration model |
+| **`README.md`** | Document in Configuration section | User-facing documentation |
+
+**Example synchronized update:**
+```bash
+# Step 1: Add to .env
+NEW_FEATURE_API_KEY=sk-real-key-here
+
+# Step 2: Add to .env.sample (with placeholder)
+NEW_FEATURE_API_KEY=your_api_key_here
+
+# Step 3: Add to config/settings.py
+class Settings(BaseSettings):
+    new_feature_api_key: str = ""
+
+# Step 4: Document in README.md
+```
+
+#### 2. Feature Changes (Adding/Modifying Features)
+
+**If you add or modify ANY feature, you MUST update:**
+
+| File | What to Update | Examples |
+|------|---------------|----------|
+| **`copilot-instructions.md`** | Architecture, patterns, components, changelog | New tool patterns, authentication flows, version history |
+| **`README.md`** | Features list, usage examples, configuration | New capabilities, example commands, updated prerequisites |
+| **Code files** | Implementation | The actual feature code |
+
+#### 3. The Commit Checklist
+
+Before committing code, verify:
+
+- [ ] **Code**: Feature implemented and tested
+- [ ] **`.env`**: Updated with new config (if applicable)
+- [ ] **`.env.sample`**: Mirrors `.env` structure with placeholders
+- [ ] **`config/settings.py`**: Settings class updated
+- [ ] **`copilot-instructions.md`**: Architecture/patterns documented
+- [ ] **`README.md`**: User-facing docs updated
+- [ ] **Tests**: New tests added (if applicable)
+- [ ] **Changelog**: Version history updated in copilot-instructions.md
+
+### 🚫 Never Commit If...
+
+- `.env` and `.env.sample` are out of sync
+- New features lack documentation in README.md
+- Architecture changes not documented in copilot-instructions.md
+- New environment variables not in Settings class
+- Breaking changes without migration guide
+
+### ✅ Documentation Update Examples
+
+#### Example 1: Adding TOTP Authentication
+```bash
+Files updated:
+✅ utils/groww_auth.py (implementation)
+✅ config/settings.py (groww_auth_method, groww_totp_token, groww_totp_secret)
+✅ .env (with real credentials)
+✅ .env.sample (with placeholders)
+✅ copilot-instructions.md (authentication flow section)
+✅ README.md (configuration section with TOTP instructions)
+✅ Changelog in copilot-instructions.md (v2.0.0 entry)
+```
+
+#### Example 2: Adding New Trading Tool
+```bash
+Files updated:
+✅ tools/new_tool.py (implementation)
+✅ tools/trading_tools.py (import and register tool)
+✅ copilot-instructions.md (tool documentation in Key Components)
+✅ README.md (feature list and usage example)
+✅ Changelog in copilot-instructions.md (version entry)
+```
 
 ---
 
@@ -550,24 +642,41 @@ settings = Settings()  # Singleton instance
 
 ### Environment Variables
 
-**Always add new env vars to:**
-1. `.env` file with documentation
-2. `.env.example` template
-3. `config/settings.py` Settings class
-4. `README.md` configuration section
+**CRITICAL: Always keep configuration files in sync!**
 
-**Example:**
+When adding or modifying environment variables, you MUST update ALL of the following:
+
+1. **`.env`** file (your local configuration with real values)
+2. **`.env.sample`** file (template with placeholder values - MUST mirror .env structure)
+3. **`config/settings.py`** Settings class (add the field with type hints and defaults)
+4. **`README.md`** configuration section (document the new variable for users)
+
+**Example of synchronized updates:**
+
 ```python
-# .env
+# 1. .env (your local file)
 # New feature configuration
 NEW_FEATURE_ENABLED=true
 NEW_FEATURE_TIMEOUT=30
 
-# config/settings.py
+# 2. .env.sample (committed to git)
+# New feature configuration
+NEW_FEATURE_ENABLED=false
+NEW_FEATURE_TIMEOUT=30
+
+# 3. config/settings.py
 class Settings(BaseSettings):
     new_feature_enabled: bool = False
     new_feature_timeout: int = 30
+
+# 4. README.md (in Configuration section)
+# Add documentation explaining what the new variables do
 ```
+
+**⚠️ IMPORTANT**: 
+- `.env` is NOT committed to git (contains sensitive data)
+- `.env.sample` IS committed to git (contains safe placeholder values)
+- Always keep `.env.sample` structure identical to `.env` but with dummy values
 
 ### Adding New Tools
 
@@ -907,6 +1016,49 @@ When contributing code:
 5. **Handle errors** gracefully
 6. **Log appropriately** (INFO for actions, DEBUG for details)
 7. **Secure by default** (no exposed credentials)
+
+### 📝 MANDATORY Documentation Updates
+
+**CRITICAL: When adding or modifying ANY feature, you MUST update these files:**
+
+#### 1. **copilot-instructions.md** (this file)
+- Update relevant sections with new patterns or architectural changes
+- Add new tool/component documentation
+- Update the Changelog & Version History section
+- Document any new best practices or patterns
+
+#### 2. **README.md**
+- Update feature lists if adding new capabilities
+- Add usage examples for new features
+- Update configuration section if new env vars added
+- Update project structure if new files/directories added
+- Keep the "What Makes This Special" section current
+
+#### 3. **.env.sample**
+- MUST be updated whenever `.env` structure changes
+- Keep placeholder values safe (no real credentials)
+- Match the exact structure and comments from `.env`
+- This is the only env file committed to git
+
+**Example workflow for adding a new feature:**
+
+```bash
+# 1. Implement the feature
+# 2. Test it works
+# 3. Update .env (if needed)
+# 4. Update .env.sample (mirror .env changes)
+# 5. Update config/settings.py (if new env vars)
+# 6. Update copilot-instructions.md (architecture/patterns)
+# 7. Update README.md (usage examples)
+# 8. Commit all changes together
+```
+
+**❌ Never commit code without updating documentation if:**
+- New features were added
+- Configuration changed
+- Architecture/patterns changed
+- New tools/components created
+- Breaking changes introduced
 
 ---
 
