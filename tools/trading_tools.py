@@ -416,7 +416,7 @@ def get_trading_summary() -> str:
                 "potential_buys": len([o for o in opportunities if o.get(f'predicted_return_{settings.expected_return_days}d', 0) >= settings.min_expected_return]),
                 "strategy_ready": len(portfolio_analysis.get('sell_candidates', [])) > 0 and len(opportunities) > 0
             },
-            "next_actions": self._generate_next_actions(portfolio_analysis, opportunities)
+            "next_actions": _generate_next_actions(portfolio_analysis, opportunities)
         }
         
         return json.dumps({
@@ -451,6 +451,171 @@ def _generate_next_actions(portfolio_analysis: Dict, opportunities: List[Dict]) 
     
     return actions
 
+@tool
+def execute_portfolio_rebalancing() -> str:
+    """
+    Execute complete portfolio rebalancing strategy:
+    1. Analyze current holdings and identify underperformers
+    2. Screen market for high-potential replacement stocks
+    3. Execute sell orders for underperformers
+    4. Execute buy orders for promising opportunities
+    
+    Returns comprehensive rebalancing report with all executed trades.
+    """
+    try:
+        logger.info("🔄 Starting portfolio rebalancing...")
+        
+        # Step 1: Get and analyze current portfolio
+        holdings = groww_client.get_holdings()
+        portfolio_analysis = stock_analyzer.analyze_portfolio_performance(holdings)
+        
+        sell_orders = []
+        buy_orders = []
+        total_sell_value = 0
+        total_buy_value = 0
+        
+        # Step 2: Execute sell orders for underperformers
+        sell_candidates = portfolio_analysis.get('sell_candidates', [])
+        logger.info(f"📊 Found {len(sell_candidates)} stocks to sell")
+        
+        for candidate in sell_candidates:
+            try:
+                symbol = candidate.get('symbol')
+                quantity = candidate.get('quantity', 0)
+                current_value = candidate.get('current_value', 0)
+                predicted_return = candidate.get('predicted_return', 0)
+                
+                if symbol and quantity > 0:
+                    logger.info(f"🔴 Selling {symbol}: {quantity} shares @ ₹{current_value/quantity:.2f}")
+                    result = groww_client.place_sell_order(symbol, quantity)
+                    
+                    total_sell_value += current_value
+                    sell_orders.append({
+                        'symbol': symbol,
+                        'quantity': quantity,
+                        'value': current_value,
+                        'predicted_return': predicted_return,
+                        'reason': candidate.get('reason', 'Underperformer'),
+                        'status': 'executed'
+                    })
+            except Exception as e:
+                logger.error(f"❌ Failed to sell {symbol}: {e}")
+                sell_orders.append({
+                    'symbol': symbol,
+                    'quantity': quantity,
+                    'status': 'failed',
+                    'error': str(e)
+                })
+        
+        # Step 3: Find replacement stocks
+        available_budget = max(total_sell_value, settings.max_investment_amount * 0.5)
+        logger.info(f"💰 Available budget for buying: ₹{available_budget:,.0f}")
+        
+        # Use stock screener to find opportunities
+        from .comprehensive_screener import comprehensive_screener
+        screening_results = comprehensive_screener.perform_comprehensive_screening(
+            budget=available_budget,
+            iterations=10
+        )
+        
+        # Step 4: Execute buy orders
+        buy_candidates = screening_results.get('final_recommendations', {}).get('recommended_buys', [])
+        if not buy_candidates:
+            buy_candidates = screening_results.get('top_buy_candidates', [])[:5]
+        
+        logger.info(f"📈 Found {len(buy_candidates)} potential buy opportunities")
+        
+        remaining_budget = available_budget
+        for candidate in buy_candidates:
+            if remaining_budget <= 0:
+                break
+            
+            try:
+                symbol = candidate.get('symbol', '').replace('.NS', '')
+                current_price = candidate.get('current_price', 0)
+                predicted_return = candidate.get('predicted_return', 0)
+                
+                if not symbol or current_price <= 0:
+                    continue
+                
+                # Check if return meets threshold
+                if predicted_return < settings.min_expected_return:
+                    logger.info(f"⏭️ Skipping {symbol}: Return {predicted_return:.2%} below {settings.min_expected_return:.2%} threshold")
+                    continue
+                
+                # Calculate quantity (allocate 15-20% of budget per stock)
+                allocation = min(remaining_budget * 0.20, available_budget * 0.25)
+                quantity = int(allocation / current_price)
+                
+                if quantity > 0:
+                    buy_value = quantity * current_price
+                    logger.info(f"🟢 Buying {symbol}: {quantity} shares @ ₹{current_price:.2f} (Expected return: {predicted_return:.2%})")
+                    
+                    result = groww_client.place_buy_order(symbol, quantity)
+                    
+                    remaining_budget -= buy_value
+                    total_buy_value += buy_value
+                    
+                    buy_orders.append({
+                        'symbol': symbol,
+                        'quantity': quantity,
+                        'price': current_price,
+                        'value': buy_value,
+                        'predicted_return': predicted_return,
+                        'technical_score': candidate.get('technical_score', 0),
+                        'reason': candidate.get('recommendation_reason', 'High potential'),
+                        'status': 'executed'
+                    })
+            except Exception as e:
+                logger.error(f"❌ Failed to buy {symbol}: {e}")
+                buy_orders.append({
+                    'symbol': symbol,
+                    'status': 'failed',
+                    'error': str(e)
+                })
+        
+        # Step 5: Generate comprehensive report
+        successful_sells = [o for o in sell_orders if o.get('status') == 'executed']
+        successful_buys = [o for o in buy_orders if o.get('status') == 'executed']
+        
+        rebalancing_report = {
+            'timestamp': str(logger.info),
+            'summary': {
+                'total_sell_orders': len(successful_sells),
+                'total_buy_orders': len(successful_buys),
+                'total_sell_value': total_sell_value,
+                'total_buy_value': total_buy_value,
+                'remaining_cash': remaining_budget,
+                'portfolio_turnover': (total_sell_value + total_buy_value) / 2 if holdings else 0
+            },
+            'sell_details': sell_orders,
+            'buy_details': buy_orders,
+            'performance_expectations': {
+                'avg_expected_return': sum(o.get('predicted_return', 0) for o in successful_buys) / max(len(successful_buys), 1),
+                'time_horizon_days': settings.expected_return_days,
+                'diversification': len(successful_buys)
+            },
+            'warnings': []
+        }
+        
+        # Add warnings
+        if len(successful_buys) == 0:
+            rebalancing_report['warnings'].append("⚠️ No buy orders executed - no stocks met the return threshold")
+        if remaining_budget > available_budget * 0.5:
+            rebalancing_report['warnings'].append(f"⚠️ High remaining cash: ₹{remaining_budget:,.0f} - limited opportunities found")
+        
+        return json.dumps({
+            "status": "success",
+            "rebalancing_report": rebalancing_report
+        }, indent=2)
+        
+    except Exception as e:
+        logger.error(f"Portfolio rebalancing failed: {str(e)}")
+        return json.dumps({
+            "status": "error",
+            "message": f"Rebalancing failed: {str(e)}"
+        })
+
 # List of all available tools
 trading_tools = [
     get_current_portfolio,
@@ -461,7 +626,8 @@ trading_tools = [
     execute_buy_order,
     get_stock_analysis,
     get_trading_configuration,
-    get_trading_summary
+    get_trading_summary,
+    execute_portfolio_rebalancing
 ]
 
 # Combine all trading tools

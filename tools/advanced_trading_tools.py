@@ -395,19 +395,123 @@ def _assess_market_risk(market_sentiment: Dict) -> Dict[str, Any]:
 
 def _execute_enhanced_trades(portfolio_analysis: Dict, screening_results: Dict, market_sentiment: Dict) -> Dict[str, Any]:
     """Execute trades based on enhanced analysis."""
-    # This would contain the actual trade execution logic
-    # For now, return a structured response
+    from .groww_api import groww_client
+    
+    sell_orders = []
+    buy_orders = []
+    total_sell_value = 0
+    total_buy_value = 0
+    
+    # Step 1: Execute sell orders for underperformers
+    sell_candidates = portfolio_analysis.get('sell_candidates', [])
+    for candidate in sell_candidates:
+        try:
+            symbol = candidate.get('symbol')
+            quantity = candidate.get('quantity', 0)
+            
+            if symbol and quantity > 0:
+                logger.info(f"🔴 Executing sell order for {symbol} ({quantity} shares)")
+                result = groww_client.place_sell_order(symbol, quantity)
+                
+                sell_value = candidate.get('current_value', 0)
+                total_sell_value += sell_value
+                
+                sell_orders.append({
+                    'symbol': symbol,
+                    'quantity': quantity,
+                    'value': sell_value,
+                    'reason': candidate.get('reason', 'Underperformer'),
+                    'status': 'executed'
+                })
+        except Exception as e:
+            logger.error(f"Failed to execute sell order for {symbol}: {e}")
+            sell_orders.append({
+                'symbol': symbol,
+                'quantity': quantity,
+                'status': 'failed',
+                'error': str(e)
+            })
+    
+    # Step 2: Calculate available cash for buying
+    available_cash = total_sell_value
+    if available_cash <= 0:
+        logger.warning("⚠️ No cash available from sell orders, checking max investment limit")
+        available_cash = settings.max_investment_amount
+    
+    # Step 3: Execute buy orders for top opportunities
+    buy_candidates = screening_results.get('final_recommendations', {}).get('recommended_buys', [])
+    if not buy_candidates:
+        buy_candidates = screening_results.get('top_buy_candidates', [])[:5]  # Top 5 if no final recommendations
+    
+    remaining_cash = available_cash
+    for candidate in buy_candidates:
+        if remaining_cash <= 0:
+            logger.info("💰 No remaining cash for additional purchases")
+            break
+            
+        try:
+            symbol = candidate.get('symbol', '').replace('.NS', '')
+            current_price = candidate.get('current_price', 0)
+            predicted_return = candidate.get('predicted_return', 0)
+            
+            if not symbol or current_price <= 0:
+                continue
+            
+            # Skip if predicted return doesn't meet threshold
+            if predicted_return < settings.min_expected_return:
+                logger.info(f"⏭️ Skipping {symbol}: Return {predicted_return:.2%} below threshold")
+                continue
+            
+            # Calculate quantity based on available cash (allocate proportionally)
+            max_allocation = min(remaining_cash * 0.25, settings.max_investment_amount * 0.2)  # Max 25% of remaining or 20% of total budget
+            quantity = int(max_allocation / current_price)
+            
+            if quantity > 0:
+                buy_value = quantity * current_price
+                
+                logger.info(f"🟢 Executing buy order for {symbol} ({quantity} shares @ ₹{current_price:.2f})")
+                result = groww_client.place_buy_order(symbol, quantity)
+                
+                remaining_cash -= buy_value
+                total_buy_value += buy_value
+                
+                buy_orders.append({
+                    'symbol': symbol,
+                    'quantity': quantity,
+                    'price': current_price,
+                    'value': buy_value,
+                    'predicted_return': predicted_return,
+                    'reason': candidate.get('analysis_summary', 'High potential opportunity'),
+                    'status': 'executed'
+                })
+        except Exception as e:
+            logger.error(f"Failed to execute buy order for {symbol}: {e}")
+            buy_orders.append({
+                'symbol': symbol,
+                'status': 'failed',
+                'error': str(e)
+            })
+    
+    # Calculate expected outcomes
+    expected_return = sum(order.get('predicted_return', 0) * order.get('value', 0) 
+                         for order in buy_orders if order.get('status') == 'executed') / max(total_buy_value, 1)
+    
     return {
         'execution_summary': {
-            'trades_executed': 0,
-            'total_investment': 0,
+            'trades_executed': len(sell_orders) + len(buy_orders),
+            'sell_orders_count': len([o for o in sell_orders if o.get('status') == 'executed']),
+            'buy_orders_count': len([o for o in buy_orders if o.get('status') == 'executed']),
+            'total_sell_value': total_sell_value,
+            'total_buy_value': total_buy_value,
+            'remaining_cash': remaining_cash,
             'strategy_alignment': 'high'
         },
-        'sell_orders': [],
-        'buy_orders': [],
+        'sell_orders': sell_orders,
+        'buy_orders': buy_orders,
         'expected_outcomes': {
-            'expected_return': 0.02,
-            'risk_adjusted_return': 0.015
+            'expected_return': expected_return,
+            'risk_adjusted_return': expected_return * 0.75,
+            'total_investment': total_buy_value
         }
     }
 

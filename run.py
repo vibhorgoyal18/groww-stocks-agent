@@ -156,16 +156,21 @@ def run_portfolio_rebalancing():
         from agent.trading_agent import trading_agent
         
         print("\n🚀 Starting portfolio rebalancing...")
-        result = trading_agent.chat("""Execute portfolio rebalancing strategy:
+        result = trading_agent.chat("""Execute complete portfolio rebalancing using the execute_portfolio_rebalancing() tool.
 
-1. Analyze current portfolio holdings
-2. Identify underperformers to sell
-3. Find high-potential replacement stocks
-4. Execute sell orders for poor performers
-5. Execute buy orders for good opportunities
-6. Provide detailed rebalancing report
+This tool will automatically:
+1. Analyze current portfolio holdings and identify underperformers
+2. Screen the market for high-potential replacement stocks (targeting {:.1%} returns in {} days)
+3. Execute sell orders for poor performers
+4. Execute buy orders for promising opportunities with predicted returns above threshold
 
-Make sure to achieve proper diversification and target {:.1%} returns.""".format(settings.min_expected_return))
+IMPORTANT: Use the execute_portfolio_rebalancing() tool directly - it handles all steps automatically.
+
+After execution, provide a summary of:
+- Total stocks sold and bought
+- Investment amounts
+- Expected returns
+- Any warnings or issues encountered""".format(settings.min_expected_return, settings.expected_return_days))
         
         if result["status"] == "success":
             print("\n✅ Portfolio Rebalancing Complete!")
