@@ -525,17 +525,28 @@ def execute_portfolio_rebalancing() -> str:
         
         logger.info(f"📈 Found {len(buy_candidates)} potential buy opportunities")
         
+        # Debug: Log first candidate structure
+        if buy_candidates:
+            logger.info(f"🔍 Sample candidate keys: {list(buy_candidates[0].keys())}")
+            logger.info(f"🔍 Sample candidate: {buy_candidates[0].get('symbol', 'N/A')} - Return: {buy_candidates[0].get(f'predicted_return_{settings.expected_return_days}d', buy_candidates[0].get('expected_return', 0))}")
+        
         remaining_budget = available_budget
         for candidate in buy_candidates:
             if remaining_budget <= 0:
                 break
             
             try:
-                symbol = candidate.get('symbol', '').replace('.NS', '')
+                symbol = candidate.get('symbol', '').replace('.NS', '').replace('.BO', '')
                 current_price = candidate.get('current_price', 0)
-                predicted_return = candidate.get('predicted_return', 0)
+                
+                # Get predicted return - handle both structures:
+                # 1. From final_recommendations: uses 'expected_return'
+                # 2. From top_buy_candidates: uses 'predicted_return_7d' (or other days)
+                predicted_return = candidate.get('expected_return', 
+                                                candidate.get(f'predicted_return_{settings.expected_return_days}d', 0))
                 
                 if not symbol or current_price <= 0:
+                    logger.warning(f"⏭️ Skipping invalid candidate: symbol={symbol}, price={current_price}")
                     continue
                 
                 # Check if return meets threshold

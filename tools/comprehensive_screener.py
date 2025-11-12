@@ -368,8 +368,11 @@ class ComprehensiveStockScreener:
     def _enhanced_stock_analysis(self, symbol: str, market_sentiment: Dict) -> Dict[str, Any]:
         """Enhanced stock analysis incorporating market sentiment and news."""
         try:
+            # Clean symbol - remove Yahoo Finance suffix (.NS, .BO) for Groww API
+            clean_symbol = symbol.replace('.NS', '').replace('.BO', '')
+            
             # Get basic technical analysis
-            analysis = stock_analyzer._analyze_single_stock(symbol)
+            analysis = stock_analyzer._analyze_single_stock(clean_symbol)
             
             if 'error' in analysis:
                 return analysis
@@ -505,6 +508,7 @@ class ComprehensiveStockScreener:
                         'symbol': stock.get('symbol'),
                         'shares': shares,
                         'investment': investment,
+                        'current_price': current_price,  # Add current price for rebalancing
                         'expected_return': stock.get(f'predicted_return_{settings.expected_return_days}d', 0),
                         'overall_score': stock.get('overall_score', 0),
                         'reasoning': stock.get('enhanced_reasoning', [])
