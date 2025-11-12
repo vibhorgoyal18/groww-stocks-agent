@@ -484,7 +484,7 @@ def show_menu():
     print("="*70)
 
 def main():
-    """Main application loop."""
+    """Main application - execute once and exit."""
     print_banner()
     
     # Check environment
@@ -496,38 +496,39 @@ def main():
     print("   Navigate through options to analyze, trade, and optimize your portfolio.\n")
     
     try:
-        while True:
-            show_menu()
-            choice = input("👉 Enter your choice (0-9): ").strip()
-            
-            if choice == '1':
-                run_ai_portfolio_optimization()
-            elif choice == '2':
-                run_portfolio_rebalancing()
-            elif choice == '3':
-                run_portfolio_analysis()
-            elif choice == '4':
-                run_market_analysis()
-            elif choice == '5':
-                run_stock_screening()
-            elif choice == '6':
-                run_trading_summary()
-            elif choice == '7':
-                run_find_opportunities()
-            elif choice == '8':
-                run_custom_strategy()
-            elif choice == '9':
-                run_demo()
-            elif choice == '0':
-                print("\n" + "="*70)
-                print("👋 Thank you for using AI Stock Trading Agent!")
-                print("   Stay profitable! 📈")
-                print("="*70)
-                break
-            else:
-                print("\n❌ Invalid choice. Please enter a number between 0-9.")
-            
-            input("\n⏸️  Press Enter to continue...")
+        show_menu()
+        choice = input("👉 Enter your choice (0-9): ").strip()
+        
+        if choice == '1':
+            run_ai_portfolio_optimization()
+        elif choice == '2':
+            run_portfolio_rebalancing()
+        elif choice == '3':
+            run_portfolio_analysis()
+        elif choice == '4':
+            run_market_analysis()
+        elif choice == '5':
+            run_stock_screening()
+        elif choice == '6':
+            run_trading_summary()
+        elif choice == '7':
+            run_find_opportunities()
+        elif choice == '8':
+            run_custom_strategy()
+        elif choice == '9':
+            run_demo()
+        elif choice == '0':
+            print("\n" + "="*70)
+            print("👋 Thank you for using AI Stock Trading Agent!")
+            print("   Stay profitable! 📈")
+            print("="*70)
+        else:
+            print("\n❌ Invalid choice. Please enter a number between 0-9.")
+        
+        print("\n" + "="*70)
+        print("✅ Execution completed!")
+        print("👋 Goodbye!")
+        print("="*70)
     
     except KeyboardInterrupt:
         print("\n\n⚠️  Operation interrupted by user")
