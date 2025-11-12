@@ -138,28 +138,28 @@ class StockAnalyzer:
             volatility = indicators.get('volatility', 0.02)
             
             # Base prediction on momentum (convert 0-100 scale to expected return)
-            # Momentum 50 = 0% return, 75 = ~15% return, 25 = -15% return
-            base_return = (momentum_score - 50) / 50 * 0.15
+            # More conservative: Momentum 50 = 0% return, 75 = ~8% return, 25 = -8% return
+            base_return = (momentum_score - 50) / 50 * 0.08
             
-            # Adjust for position in day's range
-            # Being near high suggests continued strength, near low suggests recovery potential
-            position_adjustment = (price_position - 0.5) * 0.05
+            # Adjust for position in day's range (smaller impact)
+            # Being near high suggests strength, near low suggests potential
+            position_adjustment = (price_position - 0.5) * 0.02
             
-            # Adjust for current day's change
-            change_adjustment = change_percent * 0.3
+            # Adjust for current day's change (reduced weight)
+            change_adjustment = change_percent * 0.15
             
-            # Scale by time horizon
-            time_factor = days / settings.expected_return_days
+            # Scale by time horizon (with diminishing returns for longer periods)
+            time_factor = min(days / settings.expected_return_days, 1.5)
             
             # Combine factors
             predicted_return = (base_return + position_adjustment + change_adjustment) * time_factor
             
-            # Add some randomness based on volatility
-            noise = np.random.normal(0, volatility * 0.5)
+            # Add small random variance based on volatility
+            noise = np.random.normal(0, volatility * 0.3)
             predicted_return += noise
             
-            # Cap predictions at reasonable levels
-            return min(max(predicted_return, -0.30), 0.40)
+            # Cap predictions at more reasonable levels (-20% to +25%)
+            return min(max(predicted_return, -0.20), 0.25)
             
         except Exception as e:
             logger.error(f"Prediction failed: {str(e)}")
@@ -197,6 +197,9 @@ class StockAnalyzer:
             analysis = {
                 'symbol': symbol,
                 'current_price': indicators.get('current_price', 0),
+                'open_price': indicators.get('open_price', 0),
+                'high_price': indicators.get('high_price', 0),
+                'low_price': indicators.get('low_price', 0),
                 'predicted_return_{}d'.format(days): predicted_return,
                 'technical_score': technical_score,
                 'risk_score': risk_score,

@@ -131,37 +131,10 @@ class GrowwAPIClient:
     def _get_current_price(self, trading_symbol: str) -> float:
         """Get current price using multiple methods."""
         try:
-            # Method 1: Try Groww API with proper parameters
-            try:
-                # Try different combinations of exchange and segment
-                ltp_response = self._groww_api.get_ltp(trading_symbol, 'CASH', 'NSE')
-                if isinstance(ltp_response, dict) and 'ltp' in ltp_response:
-                    return float(ltp_response['ltp'])
-            except:
-                pass
-            
-            try:
-                # Try with different segment format
-                quote_response = self._groww_api.get_quote(trading_symbol, 'NSE', 'CASH')
-                if isinstance(quote_response, dict) and 'ltp' in quote_response:
-                    return float(quote_response['ltp'])
-            except:
-                pass
-            
-            # Try BSE exchange as fallback
-            try:
-                ltp_response = self._groww_api.get_ltp(trading_symbol, 'CASH', 'BSE')
-                if isinstance(ltp_response, dict) and 'ltp' in ltp_response:
-                    return float(ltp_response['ltp'])
-            except:
-                pass
-            
-            try:
-                quote_response = self._groww_api.get_quote(trading_symbol, 'BSE', 'CASH')
-                if isinstance(quote_response, dict) and 'ltp' in quote_response:
-                    return float(quote_response['ltp'])
-            except:
-                pass
+            # Try to use the main get_stock_price method
+            price_data = self.get_stock_price(trading_symbol)
+            if price_data and price_data.get('current_price', 0) > 0:
+                return float(price_data['current_price'])
             
             logger.warning(f"Could not fetch current price for {trading_symbol} from Groww API")
             return 0  # Will be handled by caller
@@ -246,16 +219,11 @@ class GrowwAPIClient:
             raise
     
     @secure_api_call
-    def get_stock_price(self, symbol: str) -> Dict[str, Any]:
+    def get_stock_price(self, symbol: str, exchange: str = 'NSE', segment: str = 'CASH') -> Dict[str, Any]:
         """Get current stock price using official SDK."""
         try:
             if not self._groww_api:
                 raise ValueError("Groww API not initialized")
-            
-            # Get market quote using correct method
-            quote = self._groww_api.get_quote(symbol)
-            ltp = self._groww_api.get_ltp(symbol)
-            ohlc = self._groww_api.get_ohlc(symbol)
             
             result = {
                 'symbol': symbol,
@@ -269,22 +237,39 @@ class GrowwAPIClient:
                 'change_percent': 0
             }
             
-            # Extract LTP
-            if ltp:
-                result['current_price'] = float(ltp.get('ltp', 0))
+            # Try NSE first, then BSE as fallback
+            exchanges = ['NSE', 'BSE']
             
-            # Extract OHLC data
-            if ohlc:
-                result['open_price'] = float(ohlc.get('open', 0))
-                result['high_price'] = float(ohlc.get('high', 0))
-                result['low_price'] = float(ohlc.get('low', 0))
-                result['close_price'] = float(ohlc.get('close', 0))
+            for exch in exchanges:
+                try:
+                    # Get quote data - it includes everything we need
+                    quote = self._groww_api.get_quote(symbol, exch, segment)
+                    
+                    if quote and quote.get('last_price', 0) > 0:
+                        # Extract price data
+                        result['current_price'] = float(quote.get('last_price', 0))
+                        result['volume'] = float(quote.get('volume', 0))
+                        result['change'] = float(quote.get('day_change', 0))
+                        result['change_percent'] = float(quote.get('day_change_perc', 0))
+                        
+                        # Extract OHLC from nested object
+                        ohlc = quote.get('ohlc', {})
+                        if ohlc:
+                            result['open_price'] = float(ohlc.get('open', 0))
+                            result['high_price'] = float(ohlc.get('high', 0))
+                            result['low_price'] = float(ohlc.get('low', 0))
+                            result['close_price'] = float(ohlc.get('close', 0))
+                        
+                        logger.info(f"Got price data for {symbol} from {exch}: ₹{result['current_price']:.2f}")
+                        return result
+                        
+                except Exception as e:
+                    logger.debug(f"Failed to get data from {exch} for {symbol}: {str(e)}")
+                    continue
             
-            # Extract quote data
-            if quote:
-                result['volume'] = float(quote.get('volume', 0))
-                result['change'] = float(quote.get('change', 0))
-                result['change_percent'] = float(quote.get('changePercentage', 0))
+            # If we couldn't get data from any exchange
+            if result['current_price'] == 0:
+                logger.warning(f"Could not fetch price data for {symbol} from any exchange")
             
             return result
                 
