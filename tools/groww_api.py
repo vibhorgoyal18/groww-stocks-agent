@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Any
 from utils.security import key_manager, secure_api_call
 from utils.groww_auth import get_authenticated_groww_client
 from config.settings import settings
-import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
@@ -149,40 +148,22 @@ class GrowwAPIClient:
             except:
                 pass
             
-            # Method 2: Use Yahoo Finance as fallback
-            # Try different symbol formats for Yahoo Finance
-            symbol_formats = [
-                f"{trading_symbol}.NS",  # NSE format
-                f"{trading_symbol}.BO",  # BSE format
-                trading_symbol           # Direct symbol
-            ]
+            # Try BSE exchange as fallback
+            try:
+                ltp_response = self._groww_api.get_ltp(trading_symbol, 'CASH', 'BSE')
+                if isinstance(ltp_response, dict) and 'ltp' in ltp_response:
+                    return float(ltp_response['ltp'])
+            except:
+                pass
             
-            for symbol_format in symbol_formats:
-                try:
-                    ticker = yf.Ticker(symbol_format)
-                    data = ticker.history(period="1d")
-                    if not data.empty:
-                        current_price = float(data['Close'].iloc[-1])
-                        logger.info(f"Got price for {trading_symbol} from Yahoo Finance: {current_price}")
-                        return current_price
-                except Exception as e:
-                    logger.debug(f"Yahoo Finance failed for {symbol_format}: {str(e)}")
-                    continue
+            try:
+                quote_response = self._groww_api.get_quote(trading_symbol, 'BSE', 'CASH')
+                if isinstance(quote_response, dict) and 'ltp' in quote_response:
+                    return float(quote_response['ltp'])
+            except:
+                pass
             
-            # Method 3: Use fast_info as another fallback
-            for symbol_format in symbol_formats:
-                try:
-                    ticker = yf.Ticker(symbol_format)
-                    fast_info = ticker.fast_info
-                    if hasattr(fast_info, 'last_price') and fast_info.last_price:
-                        current_price = float(fast_info.last_price)
-                        logger.info(f"Got fast price for {trading_symbol}: {current_price}")
-                        return current_price
-                except Exception as e:
-                    logger.debug(f"Yahoo Finance fast_info failed for {symbol_format}: {str(e)}")
-                    continue
-            
-            logger.warning(f"Could not fetch current price for {trading_symbol}, using average price")
+            logger.warning(f"Could not fetch current price for {trading_symbol} from Groww API")
             return 0  # Will be handled by caller
             
         except Exception as e:

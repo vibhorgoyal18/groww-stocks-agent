@@ -1,7 +1,5 @@
-import yfinance as yf
 import pandas as pd
 import numpy as np
-import ta
 import logging
 from typing import Dict, List, Tuple, Any, Optional
 from sklearn.ensemble import RandomForestRegressor
@@ -13,17 +11,25 @@ from sklearn.linear_model import LinearRegression
 logger = logging.getLogger(__name__)
 
 class StockAnalyzer:
-    """Advanced stock analysis with time-based predictions."""
+    """Advanced stock analysis with time-based predictions using Groww API."""
     
     def __init__(self):
         self.scaler = StandardScaler()
         self.model = RandomForestRegressor(n_estimators=100, random_state=42)
         self.cache = {}
         self.cache_timeout = 300  # 5 minutes
+        self._groww_client = None
     
-    def _get_stock_data(self, symbol: str, period: str = "3mo") -> pd.DataFrame:
-        """Get stock data with caching and proper Indian symbol formatting."""
-        cache_key = f"{symbol}_{period}"
+    def _get_groww_client(self):
+        """Lazy load Groww API client."""
+        if self._groww_client is None:
+            from .groww_api import groww_client
+            self._groww_client = groww_client
+        return self._groww_client
+    
+    def _get_stock_data(self, symbol: str) -> Dict[str, Any]:
+        """Get stock data from Groww API with caching."""
+        cache_key = f"{symbol}_data"
         current_time = datetime.now()
         
         if cache_key in self.cache:
@@ -32,208 +38,161 @@ class StockAnalyzer:
                 return cached_data
         
         try:
-            # Try different symbol formats for Indian stocks
-            symbol_formats = [
-                f"{symbol}.NS",  # NSE format
-                f"{symbol}.BO",  # BSE format  
-                symbol           # Direct symbol
-            ]
+            client = self._get_groww_client()
             
-            for symbol_format in symbol_formats:
-                try:
-                    ticker = yf.Ticker(symbol_format)
-                    data = ticker.history(period=period)
-                    if not data.empty and len(data) > 10:  # Ensure we have sufficient data
-                        logger.info(f"Got data for {symbol} using format {symbol_format}")
-                        self.cache[cache_key] = (data, current_time)
-                        return data
-                except Exception as e:
-                    logger.debug(f"Failed to get data for {symbol_format}: {str(e)}")
-                    continue
+            # Get current price and OHLC data
+            try:
+                price_data = client.get_stock_price(symbol)
+                if price_data and price_data.get('current_price', 0) > 0:
+                    self.cache[cache_key] = (price_data, current_time)
+                    return price_data
+            except Exception as e:
+                logger.debug(f"Failed to get price data for {symbol}: {str(e)}")
             
-            logger.warning(f"No data found for {symbol} in any format")
-            return pd.DataFrame()
+            logger.warning(f"No data found for {symbol}")
+            return {}
             
         except Exception as e:
             logger.error(f"Failed to fetch data for {symbol}: {str(e)}")
-            return pd.DataFrame()
+            return {}
     
-    def _calculate_technical_indicators(self, data: pd.DataFrame) -> Dict[str, float]:
-        """Calculate comprehensive technical indicators."""
-        if data.empty or len(data) < 20:
+    def _calculate_technical_indicators(self, price_data: Dict[str, Any]) -> Dict[str, float]:
+        """Calculate technical indicators from current price data."""
+        if not price_data or price_data.get('current_price', 0) <= 0:
             return {}
         
-        # Price-based indicators
-        current_price = data['Close'].iloc[-1]
-        sma_20 = data['Close'].rolling(window=20).mean().iloc[-1]
-        sma_50 = data['Close'].rolling(window=50).mean().iloc[-1] if len(data) >= 50 else sma_20
+        current_price = price_data.get('current_price', 0)
+        open_price = price_data.get('open_price', current_price)
+        high_price = price_data.get('high_price', current_price)
+        low_price = price_data.get('low_price', current_price)
+        close_price = price_data.get('close_price', current_price)
+        change_percent = price_data.get('change_percent', 0)
+        volume = price_data.get('volume', 0)
         
-        # RSI
-        delta = data['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi = 100 - (100 / (1 + rs)).iloc[-1]
+        # Calculate intraday metrics
+        day_range = high_price - low_price if high_price > 0 and low_price > 0 else 0
+        price_position = ((current_price - low_price) / day_range) if day_range > 0 else 0.5
         
-        # MACD
-        ema_12 = data['Close'].ewm(span=12).mean()
-        ema_26 = data['Close'].ewm(span=26).mean()
-        macd = ema_12 - ema_26
-        signal = macd.ewm(span=9).mean()
-        macd_histogram = (macd - signal).iloc[-1]
+        # Simple momentum indicators based on day's movement
+        price_vs_open = ((current_price - open_price) / open_price) if open_price > 0 else 0
         
-        # Bollinger Bands
-        bb_middle = data['Close'].rolling(window=20).mean()
-        bb_std = data['Close'].rolling(window=20).std()
-        bb_upper = bb_middle + (bb_std * 2)
-        bb_lower = bb_middle - (bb_std * 2)
-        bb_position = (current_price - bb_lower.iloc[-1]) / (bb_upper.iloc[-1] - bb_lower.iloc[-1])
-        
-        # Volume indicators
-        avg_volume = data['Volume'].rolling(window=20).mean().iloc[-1]
-        current_volume = data['Volume'].iloc[-1]
-        volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1
-        
-        # Volatility
-        returns = data['Close'].pct_change().dropna()
-        volatility = returns.std() * np.sqrt(252)  # Annualized
-        
-        # Trend analysis
-        price_change_1d = (data['Close'].iloc[-1] - data['Close'].iloc[-2]) / data['Close'].iloc[-2] if len(data) >= 2 else 0
-        price_change_5d = (data['Close'].iloc[-1] - data['Close'].iloc[-6]) / data['Close'].iloc[-6] if len(data) >= 6 else 0
-        price_change_20d = (data['Close'].iloc[-1] - data['Close'].iloc[-21]) / data['Close'].iloc[-21] if len(data) >= 21 else 0
+        # Estimate volatility from day range
+        volatility = (day_range / current_price) if current_price > 0 else 0
         
         return {
             'current_price': current_price,
-            'sma_20': sma_20,
-            'sma_50': sma_50,
-            'rsi': rsi,
-            'macd_histogram': macd_histogram,
-            'bb_position': bb_position,
-            'volume_ratio': volume_ratio,
+            'open_price': open_price,
+            'high_price': high_price,
+            'low_price': low_price,
+            'day_range': day_range,
+            'price_position': price_position,  # 0-1, where 0 is at low, 1 is at high
+            'price_vs_open': price_vs_open,
+            'change_percent': change_percent / 100 if change_percent else 0,
+            'volume': volume,
             'volatility': volatility,
-            'price_change_1d': price_change_1d,
-            'price_change_5d': price_change_5d,
-            'price_change_20d': price_change_20d
+            'momentum_score': self._calculate_momentum_score(price_data)
         }
     
-    def _predict_return_for_days(self, data: pd.DataFrame, days: int) -> float:
-        """Predict stock return for specified number of days using ML."""
-        if data.empty or len(data) < 30:
+    def _calculate_momentum_score(self, price_data: Dict[str, Any]) -> float:
+        """Calculate a momentum score from price data (0-100)."""
+        current_price = price_data.get('current_price', 0)
+        open_price = price_data.get('open_price', current_price)
+        high_price = price_data.get('high_price', current_price)
+        low_price = price_data.get('low_price', current_price)
+        change_percent = price_data.get('change_percent', 0)
+        
+        if current_price <= 0:
+            return 50.0
+        
+        # Score based on multiple factors
+        score = 50.0  # Neutral baseline
+        
+        # Factor 1: Price change (±20 points)
+        score += min(max(change_percent, -20), 20)
+        
+        # Factor 2: Position in day's range (±15 points)
+        day_range = high_price - low_price
+        if day_range > 0:
+            position = (current_price - low_price) / day_range
+            score += (position - 0.5) * 30  # -15 to +15
+        
+        # Factor 3: Current vs open (±15 points)
+        if open_price > 0:
+            vs_open = ((current_price - open_price) / open_price) * 100
+            score += min(max(vs_open * 3, -15), 15)
+        
+        return min(max(score, 0), 100)
+    
+    def _predict_return_for_days(self, price_data: Dict[str, Any], days: int) -> float:
+        """Predict stock return for specified number of days using simple heuristics."""
+        if not price_data or price_data.get('current_price', 0) <= 0:
             return 0.0
         
         try:
-            # Prepare features for ML model
-            data['returns'] = data['Close'].pct_change()
-            data['sma_5'] = data['Close'].rolling(window=5).mean()
-            data['sma_10'] = data['Close'].rolling(window=10).mean()
-            data['volume_sma'] = data['Volume'].rolling(window=10).mean()
+            indicators = self._calculate_technical_indicators(price_data)
             
-            # Calculate RSI
-            delta = data['Close'].diff()
-            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-            rs = gain / loss
-            data['rsi'] = 100 - (100 / (1 + rs))
+            # Simple prediction based on current momentum and technical indicators
+            momentum_score = indicators.get('momentum_score', 50)
+            change_percent = indicators.get('change_percent', 0)
+            price_position = indicators.get('price_position', 0.5)
+            volatility = indicators.get('volatility', 0.02)
             
-            # Features for prediction
-            features = [
-                'returns', 'sma_5', 'sma_10', 'volume_sma', 'rsi'
-            ]
+            # Base prediction on momentum (convert 0-100 scale to expected return)
+            # Momentum 50 = 0% return, 75 = ~15% return, 25 = -15% return
+            base_return = (momentum_score - 50) / 50 * 0.15
             
-            # Create target: future return over specified days
-            data[f'future_return_{days}d'] = data['Close'].pct_change(periods=days).shift(-days)
+            # Adjust for position in day's range
+            # Being near high suggests continued strength, near low suggests recovery potential
+            position_adjustment = (price_position - 0.5) * 0.05
             
-            # Prepare training data
-            feature_data = data[features].dropna()
-            target_data = data[f'future_return_{days}d'].dropna()
+            # Adjust for current day's change
+            change_adjustment = change_percent * 0.3
             
-            # Align data
-            min_length = min(len(feature_data), len(target_data))
-            if min_length < 20:
-                # Fallback to simple trend analysis
-                recent_return = data['Close'].pct_change(periods=days).iloc[-1] if len(data) > days else 0
-                return recent_return * 1.1  # Slight momentum factor
+            # Scale by time horizon
+            time_factor = days / settings.expected_return_days
             
-            X = feature_data.iloc[-min_length:].values
-            y = target_data.iloc[-min_length:].values
+            # Combine factors
+            predicted_return = (base_return + position_adjustment + change_adjustment) * time_factor
             
-            # Use Random Forest for prediction
-            model = RandomForestRegressor(n_estimators=50, random_state=42)
-            model.fit(X[:-1], y[:-1])  # Exclude last point as it doesn't have target
+            # Add some randomness based on volatility
+            noise = np.random.normal(0, volatility * 0.5)
+            predicted_return += noise
             
-            # Predict for current data
-            current_features = feature_data.iloc[-1:].values
-            predicted_return = model.predict(current_features)[0]
-            
-            # Add confidence based on recent performance
-            recent_volatility = data['returns'].rolling(window=10).std().iloc[-1]
-            confidence_factor = max(0.5, 1 - recent_volatility * 2)
-            
-            return predicted_return * confidence_factor
+            # Cap predictions at reasonable levels
+            return min(max(predicted_return, -0.30), 0.40)
             
         except Exception as e:
-            logger.warning(f"ML prediction failed, using trend analysis: {str(e)}")
-            # Fallback to trend-based prediction
-            if len(data) >= days:
-                recent_trend = data['Close'].pct_change(periods=days).iloc[-1]
-                return recent_trend * 0.8  # Conservative trend continuation
+            logger.error(f"Prediction failed: {str(e)}")
             return 0.0
     
     def _analyze_single_stock(self, symbol: str) -> Dict[str, Any]:
         """Analyze a single stock with time-based predictions."""
         try:
-            data = self._get_stock_data(symbol)
-            if data.empty:
+            price_data = self._get_stock_data(symbol)
+            if not price_data or price_data.get('current_price', 0) <= 0:
                 return {'symbol': symbol, 'error': 'No data available'}
             
             # Get technical indicators
-            indicators = self._calculate_technical_indicators(data)
+            indicators = self._calculate_technical_indicators(price_data)
             
             # Predict returns for the configured time horizon
             days = settings.expected_return_days
-            predicted_return = self._predict_return_for_days(data, days)
+            predicted_return = self._predict_return_for_days(price_data, days)
             
-            # Calculate technical score
-            technical_signals = []
+            # Calculate technical score based on momentum
+            momentum_score = indicators.get('momentum_score', 50)
             
-            # RSI signals
-            rsi = indicators.get('rsi', 50)
-            if rsi < 30:
-                technical_signals.append(0.3)  # Oversold - positive
-            elif rsi > 70:
-                technical_signals.append(-0.3)  # Overbought - negative
-            else:
-                technical_signals.append((50 - rsi) / 100)  # Neutral zone
+            # Normalize to -1 to 1 scale
+            technical_score = (momentum_score - 50) / 50
             
-            # MACD signals
-            macd_hist = indicators.get('macd_histogram', 0)
-            technical_signals.append(np.tanh(macd_hist * 10))  # Normalized MACD signal
-            
-            # Bollinger Band position
-            bb_pos = indicators.get('bb_position', 0.5)
-            if bb_pos < 0.2:
-                technical_signals.append(0.2)  # Near lower band - positive
-            elif bb_pos > 0.8:
-                technical_signals.append(-0.2)  # Near upper band - negative
-            else:
-                technical_signals.append(0)
-            
-            # Volume confirmation
-            vol_ratio = indicators.get('volume_ratio', 1)
-            if vol_ratio > 1.5:
-                technical_signals.append(0.1)  # High volume confirmation
-            elif vol_ratio < 0.7:
-                technical_signals.append(-0.1)  # Low volume concern
-            else:
-                technical_signals.append(0)
-            
-            # Calculate overall technical score
-            technical_score = np.mean(technical_signals)
+            # Price position in day's range
+            price_position = indicators.get('price_position', 0.5)
             
             # Risk assessment
-            volatility = indicators.get('volatility', 0.3)
-            risk_score = min(volatility / 0.5, 1.0)  # Normalize to 0-1
+            volatility = indicators.get('volatility', 0.02)
+            risk_score = min(volatility / 0.05, 1.0)  # Normalize to 0-1 (5% volatility = max risk)
+            
+            change_percent = indicators.get('change_percent', 0)
             
             analysis = {
                 'symbol': symbol,
@@ -241,13 +200,14 @@ class StockAnalyzer:
                 'predicted_return_{}d'.format(days): predicted_return,
                 'technical_score': technical_score,
                 'risk_score': risk_score,
-                'rsi': rsi,
+                'momentum_score': momentum_score,
                 'volatility': volatility,
-                'trend_strength': indicators.get('price_change_5d', 0),
-                'volume_ratio': vol_ratio,
-                'bb_position': bb_pos,
-                'macd_histogram': macd_hist,
-                'analysis_confidence': 'HIGH' if len(data) > 60 else 'MEDIUM' if len(data) > 30 else 'LOW',
+                'change_percent': change_percent,
+                'price_position': price_position,
+                'price_vs_open': indicators.get('price_vs_open', 0),
+                'day_range': indicators.get('day_range', 0),
+                'volume': indicators.get('volume', 0),
+                'analysis_confidence': 'MEDIUM',  # Always MEDIUM as we only have current day data
                 'recommendation': self._generate_recommendation(predicted_return, technical_score, risk_score),
                 'reasoning': self._generate_reasoning(predicted_return, technical_score, risk_score, days)
             }
